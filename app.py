@@ -1,5 +1,5 @@
 # Import utilities
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, make_response
 
 app = Flask(__name__)
 
@@ -18,48 +18,40 @@ events = [
     Event(2, "Python Workshop")
 ]
 
-"""
-Create a new event from JSON input
-"""
+# Create a new event from JSON input
 @app.route("/events", methods=["POST"])
 def create_event():
-    
-    # Implement the Loop and Process Each Element. Return and Handle Results
     data = request.get_json()
-    new_id = max((e.id for e in events), default = 0 + 1)
+    new_id = max((e.id for e in events), default=0) + 1
     new_event = Event(id=new_id, title=data["title"])
     events.append(new_event)
-    return jsonify(new_event.to_dict()), 201
+    return make_response(jsonify(new_event.to_dict()), 201)
 
 
 # Update/edit the title of an existing event.
 @app.route("/events/<int:event_id>", methods=["PATCH"])
 def update_event(event_id):
-    
-    # Implement the Loop and Process Each Element. Return and Handle Results 
     data = request.get_json()
-    event = next((e for e in events if e.id == id), None)
-    
+    event = next((e for e in events if e.id == event_id), None)
+
     if not event:
-        return ("Event not found", 404)
+        return make_response(jsonify({"error": "Event not found"}), 404)
     if "title" in data:
         event.title = data["title"]
-    return jsonify(event.to_dict())
+    return make_response(jsonify(event.to_dict()), 200)
 
 
 # Remove an event from the list.
 @app.route("/events/<int:event_id>", methods=["DELETE"])
 def delete_event(event_id):
-
-    # Implement the Loop and Process Each Element. Return and Handle Results
     global events
-    event = next((e for e in events if e.id == id), None)
+    event = next((e for e in events if e.id == event_id), None)
 
     if not event:
-        return ("Event not found", 404)
-    events = [e for e in events if e.id != id]
-    return "", 204
-    
+        return make_response(jsonify({"error": "Event not found"}), 404)
+    events = [e for e in events if e.id != event_id]
+    return make_response("", 204)
+
 
 if __name__ == "__main__":
     app.run(debug=True)
